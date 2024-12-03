@@ -13,6 +13,8 @@
   <a href="https://github.com/Tencent/HunyuanVideo/blob/main/assets/hunyuanvideo.pdf"><img src="https://img.shields.io/static/v1?label=Tech Report&message=Arxiv:HunyuanVideo&color=red&logo=arxiv"></a> &ensp;
   <a href="https://huggingface.co/tencent/HunyuanVideo"><img src="https://img.shields.io/static/v1?label=HunyuanVideo&message=HuggingFace&color=yellow"></a> &ensp; &ensp;
   <a href="https://huggingface.co/tencent/HunyuanVideo-PromptRewrite"><img src="https://img.shields.io/static/v1?label=HunyuanVideo-PromptRewrite&message=HuggingFace&color=yellow"></a> &ensp; &ensp;
+
+  [![Replicate](https://replicate.com/zsxkib/hunyuan-video/badge)](https://replicate.com/zsxkib/hunyuan-video)
 </div>
 
 -----
@@ -45,13 +47,13 @@ The video is heavily compressed due to complaince of GitHub policy. The high qua
   - [ ] Checkpoints 
 
 ## Contents
-- [HunyuanVideo: A Systematic Framework For Large Video Generation Model Training](#hunyuanvideo--a-systematic-framework-for-large-video-generation-model-training)
+- [HunyuanVideo: A Systematic Framework For Large Video Generation Model Training](#hunyuanvideo-a-systematic-framework-for-large-video-generation-model-training)
   - [🎥 Demo](#-demo)
-  - [🔥🔥🔥 News!!](#-news!!)
+  - [🔥🔥🔥 News!!](#-news)
   - [📑 Open-source Plan](#-open-source-plan)
   - [Contents](#contents)
   - [**Abstract**](#abstract)
-  - [**HunyuanVideo Overall Architecture**](#-hunyuanvideo-overall-architecture)
+  - [**HunyuanVideo Overall Architecture**](#hunyuanvideo-overall-architecture)
   - [🎉 **HunyuanVideo Key Features**](#-hunyuanvideo-key-features)
     - [**Unified Image and Video Generative Architecture**](#unified-image-and-video-generative-architecture)
     - [**MLLM Text Encoder**](#mllm-text-encoder)
@@ -59,7 +61,7 @@ The video is heavily compressed due to complaince of GitHub policy. The high qua
     - [**Prompt Rewrite**](#prompt-rewrite)
   - [📈 Comparisons](#-comparisons)
   - [📜 Requirements](#-requirements)
-  - [🛠️ Dependencies and Installation](#-dependencies-and-installation)
+  - [🛠️ Dependencies and Installation](#️-dependencies-and-installation)
     - [Installation Guide for Linux](#installation-guide-for-linux)
   - [🧱 Download Pretrained Models](#-download-pretrained-models)
   - [🔑 Inference](#-inference)
@@ -67,6 +69,7 @@ The video is heavily compressed due to complaince of GitHub policy. The high qua
     - [More Configurations](#more-configurations)
   - [🔗 BibTeX](#-bibtex)
   - [Acknowledgements](#acknowledgements)
+  - [Star History](#star-history)
 ---
 
 ## **Abstract**
