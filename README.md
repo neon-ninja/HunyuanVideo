@@ -67,13 +67,13 @@ This repo contains PyTorch model definitions, pre-trained weights and inference/
   - [ ] Checkpoints 
 
 ## Contents
-- [HunyuanVideo: A Systematic Framework For Large Video Generation Model Training](#hunyuanvideo-a-systematic-framework-for-large-video-generation-model-training)
+- [HunyuanVideo: A Systematic Framework For Large Video Generation Model Training](#hunyuanvideo--a-systematic-framework-for-large-video-generation-model-training)
   - [🎥 Demo](#-demo)
-  - [🔥🔥🔥 News!!](#-news)
+  - [🔥🔥🔥 News!!](#-news!!)
   - [📑 Open-source Plan](#-open-source-plan)
   - [Contents](#contents)
   - [**Abstract**](#abstract)
-  - [**HunyuanVideo Overall Architecture**](#hunyuanvideo-overall-architecture)
+  - [**HunyuanVideo Overall Architecture**](#-hunyuanvideo-overall-architecture)
   - [🎉 **HunyuanVideo Key Features**](#-hunyuanvideo-key-features)
     - [**Unified Image and Video Generative Architecture**](#unified-image-and-video-generative-architecture)
     - [**MLLM Text Encoder**](#mllm-text-encoder)
@@ -81,7 +81,7 @@ This repo contains PyTorch model definitions, pre-trained weights and inference/
     - [**Prompt Rewrite**](#prompt-rewrite)
   - [📈 Comparisons](#-comparisons)
   - [📜 Requirements](#-requirements)
-  - [🛠️ Dependencies and Installation](#️-dependencies-and-installation)
+  - [🛠️ Dependencies and Installation](#-dependencies-and-installation)
     - [Installation Guide for Linux](#installation-guide-for-linux)
   - [🧱 Download Pretrained Models](#-download-pretrained-models)
   - [🔑 Single-gpu Inference](#-single-gpu-inference)
@@ -93,7 +93,6 @@ This repo contains PyTorch model definitions, pre-trained weights and inference/
   - [🔗 BibTeX](#-bibtex)
   - [🧩 Projects that use HunyuanVideo](#-projects-that-use-hunyuanvideo)
   - [Acknowledgements](#acknowledgements)
-  - [Star History](#star-history)
 ---
 
 ## **Abstract**
