@@ -2,11 +2,17 @@
 # https://cog.run/python
 
 
+from argparse import Namespace
+import shutil
 import subprocess
 import time
 from cog import BasePredictor, Input, Path
 import os
-from pathlib import Path
+from datetime import datetime
+from loguru import logger
+
+from hyvideo.inference import HunyuanVideoSampler
+from hyvideo.utils.file_utils import save_videos_grid
 
 MODEL_CACHE = "ckpts"
 BASE_URL = f"https://weights.replicate.delivery/default/hunyuan-video/{MODEL_CACHE}/"
@@ -46,6 +52,63 @@ class Predictor(BasePredictor):
             if not os.path.exists(dest_path.replace(".tar", "")):
                 download_weights(url, dest_path)
 
+        args_dict = {
+            "model": "HYVideo-T/2-cfgdistill",
+            "latent_channels": 16,
+            "precision": "bf16",
+            "rope_theta": 256,
+            "vae": "884-16c-hy",
+            "vae_precision": "fp16",
+            "vae_tiling": True,
+            "text_encoder": "llm",
+            "text_encoder_precision": "fp16",
+            "text_states_dim": 4096,
+            "text_len": 256,
+            "tokenizer": "llm",
+            "prompt_template": "dit-llm-encode",
+            "prompt_template_video": "dit-llm-encode-video",
+            "hidden_state_skip_layer": 2,
+            "apply_final_norm": False,
+            "text_encoder_2": "clipL",
+            "text_encoder_precision_2": "fp16",
+            "text_states_dim_2": 768,
+            "tokenizer_2": "clipL",
+            "text_len_2": 77,
+            "denoise_type": "flow",
+            "flow_solver": "euler",
+            "flow_shift": 7.0,
+            "flow_reverse": True,
+            "use_linear_quadratic_schedule": False,
+            "linear_schedule_end": 25,
+            "use_cpu_offload": True,
+            "batch_size": 1,
+            "disable_autocast": False,
+            "cfg_scale": 1.0,
+            "embedded_cfg_scale": 6.0,
+            "reproduce": False,
+            "model_base": "ckpts",
+            "dit_weight": "ckpts/hunyuan-video-t2v-720p/transformers/mp_rank_00_model_states.pt",
+            "model_resolution": "540p",
+            "load_key": "module",
+            "save_path": "./results",
+            "save_path_suffix": "",
+            "name_suffix": "",
+            "num_videos": 1,
+            "video_size": [480, 854],
+            "seed_type": "auto",
+            "video_length": 129,
+            "infer_steps": 50,
+            "prompt": "A cat walks on the grass, realistic style.",
+            "seed": 65025,
+            "neg_prompt": None,
+        }
+        args = Namespace(**args_dict)
+        # Initialize the video sampler
+        self.hunyuan_video_sampler = HunyuanVideoSampler.from_pretrained(
+            Path(MODEL_CACHE),
+            args=args,
+        )
+
     def predict(
         self,
         prompt: str = Input(
@@ -53,10 +116,10 @@ class Predictor(BasePredictor):
             default="A cat walks on the grass, realistic style.",
         ),
         height: int = Input(
-            description="Height of the video in pixels.", default=720, ge=1
+            description="Height of the video in pixels.", default=480, ge=1
         ),
         width: int = Input(
-            description="Width of the video in pixels.", default=1280, ge=1
+            description="Width of the video in pixels.", default=854, ge=1
         ),
         video_length: int = Input(
             description="Length of the video in frames.", default=129, ge=1
@@ -65,41 +128,49 @@ class Predictor(BasePredictor):
             description="Number of inference steps.", default=50, ge=1
         ),
         flow_shift: float = Input(description="Flow-shift parameter.", default=7.0),
+        embedded_guidance_scale: float = Input(
+            description="Embedded guidance scale for generation.",
+            default=6.0,
+            ge=1.0,
+            le=6.0,
+        ),
         seed: int = Input(description="Random seed for reproducibility.", default=None),
     ) -> Path:
         """Run a single prediction on the model."""
-
         if seed is None:
             seed = int.from_bytes(os.urandom(2), "big")
         print(f"Using seed: {seed}")
 
-        # Create the save path
-        save_path = "./results"
-        os.makedirs(save_path, exist_ok=True)
+        # Update video_size in the sampler's args to match the requested dimensions
+        self.hunyuan_video_sampler.args.video_size = [height, width]
 
-        # Construct the command string
-        cmd = (
-            f"python3 sample_video.py "
-            f"--video-size {height} {width} "
-            f"--video-length {video_length} "
-            f"--infer-steps {infer_steps} "
-            f'--prompt "{prompt}" '
-            f"--flow-shift {flow_shift} "
-            f"--seed {seed} "
-            f"--flow-reverse "
-            f"--use-cpu-offload "
-            f"--save-path {save_path}"
+        # Create save path and clear any existing files
+        save_path = "./results"
+        if os.path.exists(save_path):
+            shutil.rmtree(save_path)
+        os.makedirs(save_path)
+
+        # Generate video using HunyuanVideoSampler
+        outputs = self.hunyuan_video_sampler.predict(
+            prompt=prompt,
+            height=height,
+            width=width,
+            video_length=video_length,
+            seed=seed,
+            negative_prompt=None,
+            infer_steps=infer_steps,
+            guidance_scale=1.0,
+            num_videos_per_prompt=1,
+            flow_shift=flow_shift,
+            batch_size=1,
+            embedded_guidance_scale=embedded_guidance_scale,
         )
 
-        # Execute the command
-        os.system(cmd)
+        samples = outputs["samples"]
 
-        # Get the most recently created file in the save_path directory
-        results_path = Path(save_path)
-        video_files = list(results_path.glob("*.mp4"))
-        if not video_files:
-            raise FileNotFoundError("No video files were generated.")
+        # Save the generated video
+        sample = samples[0].unsqueeze(0)
+        output_path = f"{save_path}/video.mp4"
+        save_videos_grid(sample, output_path, fps=24)
 
-        latest_file = max(video_files, key=lambda x: x.stat().st_mtime)
-
-        return Path(str(latest_file))
+        return Path(output_path)
