@@ -18,12 +18,17 @@
 
   [![Replicate](https://replicate.com/zsxkib/hunyuan-video/badge)](https://replicate.com/zsxkib/hunyuan-video)
 </div>
+<p align="center">
+    👋 Join our <a href="assets/WECHAT.md" target="_blank">WeChat</a> and <a href="https://discord.gg/GpARqvrh" target="_blank">Discord</a> 
+</p>
+<p align="center">
 
 -----
 
 This repo contains PyTorch model definitions, pre-trained weights and inference/sampling code for our paper exploring HunyuanVideo. You can find more visualizations on our [project page](https://aivideo.hunyuan.tencent.com).
 
-> [**HunyuanVideo: A Systematic Framework For Large Video Generation Model Training**](https://github.com/Tencent/HunyuanVideo/blob/main/assets/hunyuanvideo.pdf) <br>
+> [**HunyuanVideo: A Systematic Framework For Large Video Generation Model Training**](https://github.com/Tencent/HunyuanVideo/blob/main/assets/hunyuanvideo.pdf) <be>
+
 
 ## 🎥 Demo
 <div align="center">
@@ -39,7 +44,8 @@ The video is heavily compressed due to compliance of GitHub policy. The high qua
 
 - HunyuanVideo (Text-to-Video Model)
   - [x] Inference 
-  - [x] Checkpoints 
+  - [x] Checkpoints
+  - [ ] Multi-gpu inference
   - [ ] Penguin Video Benchmark
   - [ ] Web Demo (Gradio) 
   - [ ] ComfyUI
@@ -197,6 +203,7 @@ conda activate HunyuanVideo
 python -m pip install -r requirements.txt
 
 # 4. Install flash attention v2 for acceleration (requires CUDA 11.8 or above)
+python -m pip install ninja
 python -m pip install git+https://github.com/Dao-AILab/flash-attention.git@v2.5.9.post1
 ```
 
