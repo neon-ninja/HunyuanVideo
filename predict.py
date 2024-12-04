@@ -36,6 +36,7 @@ def download_weights(url: str, dest: str) -> None:
         raise
     print("[+] Download completed in: ", time.time() - start, "seconds")
 
+
 def save_videos_grid(videos: torch.Tensor, path: str, rescale=False, n_rows=1, fps=24):
     """save videos by video tensor"""
     videos = rearrange(videos, "b c t h w -> t b c h w")
@@ -50,7 +51,7 @@ def save_videos_grid(videos: torch.Tensor, path: str, rescale=False, n_rows=1, f
         outputs.append(x)
 
     # Create frames directory
-    frames_dir = os.path.join(os.path.dirname(path), 'frames_temp')
+    frames_dir = os.path.join(os.path.dirname(path), "frames_temp")
     os.makedirs(frames_dir, exist_ok=True)
 
     # Save frames as images
@@ -60,7 +61,7 @@ def save_videos_grid(videos: torch.Tensor, path: str, rescale=False, n_rows=1, f
 
     # Build the ffmpeg command
     frame_pattern = os.path.join(frames_dir, "frame_%05d.png")
-    ffmpeg_cmd = f"ffmpeg -y -framerate {fps} -i \"{frame_pattern}\" -c:v libx264 -pix_fmt yuv420p \"{path}\""
+    ffmpeg_cmd = f'ffmpeg -y -framerate {fps} -i "{frame_pattern}" -c:v libx264 -pix_fmt yuv420p "{path}"'
 
     # Run the ffmpeg command
     os.system(ffmpeg_cmd)
@@ -148,11 +149,11 @@ class Predictor(BasePredictor):
             description="Text prompt to generate video.",
             default="A cat walks on the grass, realistic style.",
         ),
-        height: int = Input(
-            description="Height of the video in pixels.", default=480, ge=1
-        ),
         width: int = Input(
             description="Width of the video in pixels.", default=854, ge=1
+        ),
+        height: int = Input(
+            description="Height of the video in pixels.", default=480, ge=1
         ),
         video_length: int = Input(
             description="Length of the video in frames.", default=129, ge=1

@@ -1,0 +1,16 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+
+# .DS_Store
+.DS_Store
+
+# Replicate
+.cog
+/ckpts/*
+*.pt
+*.mp4
+output.*.mp4
+output.*.png
+output.*.webp
+output.*.jpg
+output.*.jpeg
