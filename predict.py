@@ -149,6 +149,10 @@ class Predictor(BasePredictor):
             description="Text prompt to generate video.",
             default="A cat walks on the grass, realistic style.",
         ),
+        negative_prompt: str = Input(
+            description="Text prompt to specify what you don't want in the video.",
+            default=None,
+        ),
         width: int = Input(
             description="Width of the video in pixels.", default=854, ge=1
         ),
@@ -191,7 +195,7 @@ class Predictor(BasePredictor):
             width=width,
             video_length=video_length,
             seed=seed,
-            negative_prompt=None,
+            negative_prompt=negative_prompt,
             infer_steps=infer_steps,
             guidance_scale=1.0,
             num_videos_per_prompt=1,
