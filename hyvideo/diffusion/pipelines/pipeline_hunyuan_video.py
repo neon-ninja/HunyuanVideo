@@ -53,6 +53,14 @@ logger = logging.get_logger(__name__)  # pylint: disable=invalid-name
 EXAMPLE_DOC_STRING = """"""
 
 
+try:
+    import xfuser
+    from xfuser.core.distributed import get_sequence_parallel_world_size
+except:
+    xfuser = None
+    get_sequence_parallel_world_size = None
+
+
 def rescale_noise_cfg(noise_cfg, noise_pred_text, guidance_rescale=0.0):
     """
     Rescale `noise_cfg` according to `guidance_rescale`. Based on findings of [Common Diffusion Noise Schedules and
@@ -553,6 +561,35 @@ class HunyuanVideoPipeline(DiffusionPipeline):
                     f" got: `prompt_embeds` {prompt_embeds.shape} != `negative_prompt_embeds`"
                     f" {negative_prompt_embeds.shape}."
                 )
+        
+        if xfuser is not None:
+            latent_space_height = int(height) // self.vae_scale_factor
+            latent_space_width = int(width) // self.vae_scale_factor
+            world_size = get_sequence_parallel_world_size()
+            if ((latent_space_height // 2) % world_size != 0) and ((latent_space_width // 2) % world_size != 0):
+                error_string = f"""
+
+                    using sequence parallelism imposes a constraint on the height and width of the video sequence which is current violated
+                    either the height or width of the video sequence, divided by 2, must be divisible by the number of GPUs. i.e.
+
+                    (height / (vae scale factor * 2)) % world size == 0 OR
+                    (width / (vae scale factor * 2)) % world size == 0
+
+                    must be true for the height and width of the video sequence.
+
+                    height: {height}
+                    width: {width}
+                    vae scale factor: {self.vae_scale_factor}
+                    latent space height = height / vae scale factor = {height} / {self.vae_scale_factor} = {latent_space_height}
+                    latent space width = width / vae scale factor = {width} / {self.vae_scale_factor} = {latent_space_width}
+                    world size: {world_size}
+
+                    please adjust the height and width such that the above condition is true
+                    for example, a height of {int(((height / 16)+1)*16)} or a width of {int(((width / 16)+1)*16)} will work
+
+
+                    """
+                raise ValueError(error_string)
 
 
     def prepare_latents(
@@ -574,6 +611,7 @@ class HunyuanVideoPipeline(DiffusionPipeline):
             int(height) // self.vae_scale_factor,
             int(width) // self.vae_scale_factor,
         )
+
         if isinstance(generator, list) and len(generator) != batch_size:
             raise ValueError(
                 f"You have passed a list of generators of length {len(generator)}, but requested an effective batch"

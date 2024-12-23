@@ -53,14 +53,14 @@ def parallelize_transformer(pipe):
         guidance: torch.Tensor = None,  # Guidance for modulation, should be cfg_scale x 1000.
         return_dict: bool = True,
     ):
-        if x.shape[-2] // 2 % get_sequence_parallel_world_size() == 0:
+        if (x.shape[-2] // 2) % get_sequence_parallel_world_size() == 0:
             # try to split x by height
             split_dim = -2
-        elif x.shape[-1] // 2 % get_sequence_parallel_world_size() == 0:
+        elif (x.shape[-1] // 2) % get_sequence_parallel_world_size() == 0:
             # try to split x by width
             split_dim = -1
         else:
-            raise ValueError(f"Cannot split video sequence into ulysses_degree x {x.shape} ring_degree ({get_sequence_parallel_world_size()}) parts evenly")
+            raise ValueError(f"Cannot split video sequence of shape {x.shape} into ulysses_degree * ring_degree ({get_sequence_parallel_world_size()}) parts evenly")
 
         # patch sizes for the temporal, height, and width dimensions are 1, 2, and 2.
         temporal_size, h, w = x.shape[2], x.shape[3] // 2, x.shape[4] // 2

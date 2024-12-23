@@ -10,6 +10,27 @@ import os
 from cog_utils import download_weights, save_videos_grid, InferenceWorkerStatus
 from hyvideo.inference import HunyuanVideoSampler
 
+import torch.multiprocessing as mp
+import torch
+
+from worker import inference_worker_func
+WORLD_SIZE = torch.cuda.device_count()
+
+# when new processes are created in setup(), they will be spawned rather than forked, this is more
+# resource intensive up front because a new python interpreter is launched and all modules
+# in the current scope are reimported. However it is required because each subprocess needs its
+# own CUDA context, and if subprocesses are forked they all end up sharing the parents which is
+# broken. This check ensures that mp.set_start_method() is only called once by the main process
+# and not by any of the worker processes.
+
+if WORLD_SIZE > 1:
+    current_method = mp.get_start_method(allow_none=True)
+    if current_method != "spawn":
+        print(f"{os.getpid()} setting start method to spawn")
+        mp.set_start_method('spawn', force=True)
+
+
+
 MODEL_CACHE = "ckpts"
 BASE_URL = f"https://weights.replicate.delivery/default/hunyuan-video/{MODEL_CACHE}/"
 
@@ -163,20 +184,7 @@ class Predictor(BasePredictor):
         return Path(output_path)
 
 
-import torch.multiprocessing as mp
-from worker import inference_worker_func
-WORLD_SIZE = 2
 
-# when new processes are created in setup(), they will be spawned rather than forked, this is more
-# resource intensive up front because a new python interpreter is launched and all modules
-# in the current scope are reimported. However it is required because each subprocess needs its
-# own CUDA context, and if subprocesses are forked they all end up sharing the parents which is
-# broken. This check ensures that mp.set_start_method() is only called once by the main process
-# and not by any of the worker processes. Doing
-current_method = mp.get_start_method(allow_none=True)
-if current_method != "spawn":
-    print(f"{os.getpid()} setting start method to spawn")
-    mp.set_start_method('spawn', force=True)
 
 
 class MultiGPUPredictor(BasePredictor):
@@ -302,10 +310,12 @@ class MultiGPUPredictor(BasePredictor):
         # wait for the main process to finish
         # this done event will be set() by the worker with rank 0 once it
         # has finished writing the video to disk
-        for rank in range(WORLD_SIZE):
-            status = self.out_queue[rank].get()
-            if status == InferenceWorkerStatus.ERROR:
-                raise Exception(f"Predict: Worker {rank} failed with error: {status.get_error_message()}")
+        worker_status = [self.out_queue[rank].get() for rank in range(WORLD_SIZE)]
+        if any([status == InferenceWorkerStatus.ERROR for status in worker_status]):
+            for status in worker_status:
+                if status == InferenceWorkerStatus.ERROR:
+                    raise Exception(f"Predict: Worker {rank} failed with error: {status.get_error_message()}")
+            
 
         # worker with rank 0 should have written the video to disk by now
         assert os.path.exists(save_path), f"Video not found at {save_path}"

@@ -43,8 +43,9 @@ def inference_worker_func(
 
     args = hunyuan_video_sampler.args
 
-    try:
-        while True:
+    while True:
+        try:
+
             predict_args = in_queue.get()
 
             # main process saying we are done
@@ -80,14 +81,14 @@ def inference_worker_func(
             # tell main process that we are done with this predict call
             out_queue.put(InferenceWorkerStatus.GOOD)
 
-    except Exception as e:
-        print(f"Worker {rank} failed with error: {e}, worker is terminating")
-        error_status = InferenceWorkerStatus.ERROR
-        error_status.set_error_message(str(e))
-        out_queue.put(error_status)
-        
+        except Exception as e:
+            print(f"Worker {rank} failed with error: {e}, worker is terminating")
+            error_status = InferenceWorkerStatus.ERROR
+            error_status.set_error_message(str(e))
+            out_queue.put(error_status)
+            
         # destroy the process group to release the port that nccl is using
-        dist.destroy_process_group()
-        raise e
+        # dist.destroy_process_group()
+        # raise e
 
 

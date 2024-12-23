@@ -21,18 +21,15 @@ def gen(output_fn, **kwargs):
     data = response.json()
     print("Generated in: ", time.time() - st)
 
-    try:
-        # import pdb; pdb.set_trace()
+    if data['status'] == "succeeded":
         datauri = data["output"]
         base64_encoded_data = datauri.split(",")[1]
-        data = base64.b64decode(base64_encoded_data)
-    except Exception:
-        print("Error!")
-        print("input:", kwargs)
-        print(data["logs"])
-        sys.exit(1)
+        content = base64.b64decode(base64_encoded_data)
+        Path(output_fn).write_bytes(content)
+        return data['status']
 
-    Path(output_fn).write_bytes(data)
+    else:
+        return data['status']
 
 
 def test_prompts():
@@ -44,11 +41,27 @@ def test_prompts():
         shutil.rmtree(output_directory)
     output_directory.mkdir(parents=True, exist_ok=True)
     
-    gen(
+    for _ in range(5):
+        status = gen(
+            output_directory / "dog.mp4",
+            prompt="a cool dog walking around",
+            negative_prompt=None,
+            width=864,
+            height=480,
+            video_length=12,
+            infer_steps=30,
+            flow_shift=7.0,
+            embedded_guidance_scale=6.0,
+            seed=1234,
+        )
+        assert status == "failed"
+    
+
+    status = gen(
         output_directory / "dog.mp4",
         prompt="a cool dog walking around",
         negative_prompt=None,
-        width=854,
+        width=864,
         height=480,
         video_length=13,
         infer_steps=30,
@@ -56,19 +69,41 @@ def test_prompts():
         embedded_guidance_scale=6.0,
         seed=1234,
     )
+    assert status == "succeeded"
+    assert (output_directory / "dog.mp4").exists(), "dog.mp4 was not generated"
 
-    gen(
+
+    status = gen(
         output_directory / "cat.mp4",
         prompt="a cool cat walking around",
         negative_prompt=None,
-        width=854,
+        width=864,
         height=480,
         video_length=13,
         infer_steps=30,
         flow_shift=7.0,
         embedded_guidance_scale=6.0,
-        seed=4567,
+        seed=1234,
     )
+    assert status == "succeeded"
+    assert (output_directory / "cat.mp4").exists(), "dog.mp4 was not generated"
 
-    assert (output_directory / "dog.mp4").exists(), "dog.mp4 was not generated"
-    assert (output_directory / "cat.mp4").exists(), "cat.mp4 was not generated"
+
+    status = gen(
+        output_directory / "donkey.mp4",
+        prompt="a cool donkey walking around",
+        negative_prompt=None,
+        width=864,
+        height=480,
+        video_length=12,
+        infer_steps=30,
+        flow_shift=7.0,
+        embedded_guidance_scale=6.0,
+        seed=1234,
+    )
+    assert status == "failed"
+
+    shutil.rmtree(output_directory)
+
+if __name__ == "__main__":
+    test_prompts()
