@@ -4,15 +4,15 @@
 build:
   # set to true if your model requires a GPU
   gpu: true
-  cuda: "12.1"
+  cuda: "12.4"
 
   # python version in the form '3.11' or '3.11.4'
   python_version: "3.10.9"
 
   # a list of packages in the format <package-name>==<version>
   python_packages:
-    - "torch==2.1.1"
-    - "torchvision==0.16.1"
+    - "torch==2.4.0"
+    - "torchvision==0.19.0"
     - "opencv-python==4.9.0.80"
     - "diffusers==0.30.2"
     - "transformers==4.46.3" # was "transformers==4.39.3" before
@@ -26,13 +26,16 @@ build:
     - "imageio==2.34.0"
     - "imageio-ffmpeg==0.5.1"
     - "safetensors==0.4.3"
-    # - "git+https://github.com/Dao-AILab/flash-attention.git@v2.5.9.post1"
+    - "packaging==24.2"
+    - "psutil==6.1.1"
 
   # commands run after the environment is setup
+  # commands run after the environment is setup
   run:
-    # - python -m pip install git+https://github.com/Dao-AILab/flash-attention.git@v2.5.9.post1
-    - FLASH_ATTENTION_SKIP_CUDA_BUILD=TRUE pip install flash-attn --no-build-isolation
+    - python -m pip install ninja
+    - python -m pip install git+https://github.com/Dao-AILab/flash-attention.git@v2.6.3
+    - python -m pip install xfuser==0.4.0
     - curl -o /usr/local/bin/pget -L "https://github.com/replicate/pget/releases/download/v0.8.2/pget_linux_x86_64" && chmod +x /usr/local/bin/pget
 
 # predict.py defines how predictions are run on your model
-predict: "predict.py:Predictor"
+predict: "predict.py:MultiGPUPredictor"

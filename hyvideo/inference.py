@@ -60,7 +60,7 @@ def parallelize_transformer(pipe):
             # try to split x by width
             split_dim = -1
         else:
-            raise ValueError(f"Cannot split video sequence into ulysses_degree x ring_degree ({get_sequence_parallel_world_size()}) parts evenly")
+            raise ValueError(f"Cannot split video sequence into ulysses_degree x {x.shape} ring_degree ({get_sequence_parallel_world_size()}) parts evenly")
 
         # patch sizes for the temporal, height, and width dimensions are 1, 2, and 2.
         temporal_size, h, w = x.shape[2], x.shape[3] // 2, x.shape[4] // 2
@@ -259,8 +259,10 @@ class Inference(object):
                 logger=logger,
                 device=device if not args.use_cpu_offload else "cpu",
             )
+        
 
-        return cls(
+
+        inference_pipeline = cls(
             args=args,
             vae=vae,
             vae_kwargs=vae_kwargs,
@@ -272,6 +274,10 @@ class Inference(object):
             logger=logger,
             parallel_args=parallel_args
         )
+
+        if args.ulysses_degree > 1 or args.ring_degree > 1:
+            parallelize_transformer(inference_pipeline.pipeline)
+        return inference_pipeline
 
     @staticmethod
     def load_state_dict(args, model, pretrained_model_path):
@@ -525,7 +531,7 @@ class HunyuanVideoSampler(Inference):
             assert seed is not None, \
                 "You have to set a seed in the distributed environment, please rerun with --seed <your-seed>."
 
-            parallelize_transformer(self.pipeline)
+            # parallelize_transformer(self.pipeline)
 
         out_dict = dict()
 
